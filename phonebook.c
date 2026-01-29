@@ -3,23 +3,24 @@
 // my goal is get confortable with persestent Data
 
 #include <stdio.h>
+#include <string.h>
+#define SIZE 100
+#define MAX_LEN 100
 
 typedef struct
 {
     char name[20];
     char number[20];
-} phonebook;
+} contacte;
 
-void delete_contact();
-void edit_contact();
-void show_contact();
-void add_contact(contacte *phonebook, int index);
-int get_int(char *label);
+void show_contact(FILE *data);
+void add_contact(contacte *phonebook, FILE *data);
+void delete_contact(FILE *data);
 
 int main(void)
 {
-    phonebook contacte[100];
-    int index = 0;
+    contacte phonebook[100];
+    int counter = sizeof(phonebook) / sizeof(phonebook[0]);
 
     while (1)
     {
@@ -32,55 +33,113 @@ int main(void)
 
         printf("1. Add Contact\n");
         printf("2. Show Contacts\n");
-        printf("3. Edit Contact\n");
-        printf("4. Delete Contact\n");
-        printf("5. Exit\n");
+        printf("3. Delete Contact\n");
+        printf("4. Exit\n");
         printf("\n");
         
-        int choice = get_int("Choice: \n");
+        int choice;
+        printf("Choice: ");
+        scanf("%d", &choice);
 
         switch (choice)
         {
             case 1:
-                add_contact(contacte, index);
+                add_contact(phonebook, data);
                 break;
             case 2:
-                show_contact(contacte, index);
+                show_contact(data);
                 break;
             case 3:
-                edit_contact(contacte, index);
+                delete_contact(data);
                 break;
             case 4:
-                delete_contact(contacte, index);
-                break;
-            case 5:
                 printf("Exiting...");
                 return 0;
         }
     }
 }
 
-void add_contact(contacte *phonebook, int index){
+void add_contact(contacte *phonebook, FILE *data){
+
+    int index = 0;
+
+    printf("Name: ");
+    scanf("%19s",phonebook[index].name);
+
+    printf("Number: ");
+    scanf("%19s", phonebook[index].number);   
+
+    fprintf(data, "%s, %s\n", phonebook[index].name, phonebook[index].number);
+    
+    fclose(data);
+
+    printf("\n");
     
 }
 
-void show_contact(){
+void show_contact(FILE *data){
+    printf("\n");
+
+    char line[20];
+    int index = 0;
+
+    while (fgets(line, sizeof(line), data))
+    {
+        printf("%d. %s",index + 1, line);
+        index++;
+    }
     
+    printf("\n");    
 }
 
-void edit_contact(){
-    
+void delete_contact(FILE *data) {
+    char line[SIZE][MAX_LEN];
+    int index = 0;
+
+    rewind(data);
+
+    // Read all contacts
+    while (fgets(line[index], MAX_LEN, data)) {
+        printf("%d. %s", index + 1, line[index]);
+        index++;
+    }
+
+    if (index == 0) {
+        printf("No contacts to delete.\n");
+        return;
+    }
+
+    int chose;
+    printf("Choose contact to delete (1-%d): ", index);
+    scanf("%d", &chose);
+
+    if (chose < 1 || chose > index) {
+        printf("Invalid choice!\n");
+        return;
+    }
+
+    chose--; // 0-based;
+
+    // Shift remaining contacts
+    for (int i = chose; i < index - 1; i++) {
+        strcpy(line[i], line[i + 1]);
+    }
+    index--;
+
+    // Rewrite the file
+    fclose(data);
+    data = fopen("phonebook.csv", "w");
+    if (!data) {
+        printf("Error opening file!\n");
+        return;
+    }
+
+    for (int i = 0; i < index; i++) {
+        fputs(line[i], data);
+    }
+
+    fclose(data);
+    printf("Contact deleted successfully!\n");
 }
 
-void delete_contact(){
-    
-}
-
-// to make the code readble
-int get_int(char *label){
-    int input;
-    printf("%s", label);
-    scanf("%d", &input);
-
-    return input;
-}
+// offff tish project takes 3hours cuz of deleting contact and in the end i asked chatgpt.
